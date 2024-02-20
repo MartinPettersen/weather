@@ -73,14 +73,19 @@ readline.question(`Hvilken by ønsker du å vite om? `, (byNavn) => {
   // console.log(isoFormatToday);
   // console.log(isoFormatToday.slice(0, 13));
   // console.log(isoFormatTomorrow);
-  console.log(isoFormatTomorrow.slice(0, 10));
+  // console.log(isoFormatTomorrow.slice(0, 10));
+  console.log(tomorrow)
   if (reply) {
+    console.log(`Temperator for ${byNavn}  ${isoFormatTomorrow.slice(5, 7)}.${isoFormatTomorrow.slice(8, 10)}.${isoFormatTomorrow.slice(0, 4)}:`)
     getCityWeatherData(byNavn)
       .then((data) => {
-        console.log("------")
+        console.log("")
         data.properties.timeseries.map((dataBlock) => {
-            console.log(dataBlock.time);
-            console.log(dataBlock.data.instant.details.air_temperature); 
+            if (isoFormatTomorrow.slice(0, 10) == dataBlock.time.slice(0, 10)) {
+                const tid = dataBlock.time.slice(11, 16);
+                const temperatur = dataBlock.data.instant.details.air_temperature
+                console.log(`Kl ${tid} ${temperatur} grader`); 
+            }
         })
         // console.log(data.properties.timeseries[0].time);
         // console.log(data.properties.timeseries[0].data.instant.details.air_temperature);

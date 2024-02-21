@@ -1,18 +1,11 @@
-console.log("hei");
-
 require("dotenv").config();
 const fetch = require("node-fetch");
+const { highLowCheck } = require('./helper-functions/highLowCheck.js');
+const { byListe } = require('./helper-data/byliste.js');
+const { uke, month } = require('./helper-data/calendarData.js');
 
-const byListe = [
-  { city: "Oslo", location: "lat=59.9333&lon=10.7166" },
-  { city: "Trondheim", location: "lat=60.3894&lon=5.33" },
-  { city: "Bergen", location: "lat=63.4308&lon=10.4034" },
-  { city: "Tromsø", location: "lat=69.6827&lon=18.9427" },
-  { city: "Vardø", location: "lat=70.3705&lon=31.0241" },
-];
 
 const getCityWeatherData = async (cityLocation) => {
-  const latlongCity = "lat=59.9333&lon=10.7166";
   const url = `https://api.met.no/weatherapi/locationforecast/2.0/compact?${cityLocation}`;
 
   const options = {
@@ -23,7 +16,6 @@ const getCityWeatherData = async (cityLocation) => {
   try {
     const data = await fetch(url, options);
     const weatherData = await data.json();
-
     return weatherData;
   } catch (error) {
     console.log("Kunne ikke finne by");
@@ -59,6 +51,8 @@ const cityQuestion = () => {
   });
 };
 
+
+
 const variableQuestion = () => {
   return new Promise((resolve, reject) => {
     readline.question(
@@ -70,155 +64,17 @@ const variableQuestion = () => {
   });
 };
 
-
-
-const test = (data, isoFormatTomorrow, brukerVariabler) => {
-  let totalTemp = 0;
-  let count = 0;
-  let totalVind = 0;
-
-  
-  function Etappe(time,temp, low, high, count, regn, vind) {
-    this.time = time;    
-    this.temp = temp;
-    this.low = low;
-    this.high = high;
-    this.count = count;
-    this.regn = regn;
-    this.vind = vind;
-  }
-
-  //const morgen = new Etappe(0, "Talon TSi", 1993);
-
-  let morgen = 0;
-  let morgenLow = 9999;
-  let morgenHigh = -9999;
-  let morgencount = 0;
-  let morgenRegn = 0;
-  let morgenVind = 0;
-
-  let formiddag = 0;
-  let formiddagLow = 9999;
-  let formiddagHigh = -9999;
-  let formiddagcount = 0;
-  let formiddagRegn = 0;
-  let formiddagVind = 0;
-
-  let ettermiddag = 0;
-  let ettermiddagLow = 9999;
-  let ettermiddagHigh = -9999;
-  let ettermiddagcount = 0;
-  let ettermiddagRegn = 0;
-  let ettermiddagVind = 0;
-
-  let kveld = 0;
-  let kveldLow = 9999;
-  let kveldHigh = -9999;
-  let kveldcount = 0;
-  let kveldRegn = 0;
-  let kveldVind = 0;
-
-  data.properties.timeseries.map((dataBlock) => {
-    if (isoFormatTomorrow.slice(0, 10) == dataBlock.time.slice(0, 10)) {
-      const tid = dataBlock.time.slice(11, 13);
-
-      const temperatur = dataBlock.data.instant.details.air_temperature;
-      const vind = dataBlock.data.instant.details.wind_speed;
-      let regn = 0;
-
-      if (dataBlock.data.next_1_hours) {
-        regn = dataBlock.data.next_1_hours.details.precipitation_amount;
-      } else if (dataBlock.data.next_6_hours) {
-        regn = dataBlock.data.next_6_hours.details.precipitation_amount;
-      }
-
-      totalTemp += temperatur;
-      count += 1;
-      totalVind += vind;
-
-      if (tid < 8) {
-        morgen += temperatur;
-
-        morgenRegn += regn;
-        morgenVind += vind;
-
-        morgencount += 1;
-        if (temperatur < morgenLow) {
-          morgenLow = temperatur;
-        }
-        if (temperatur > morgenHigh) {
-          morgenHigh = temperatur;
-        }
-      } else if (tid < 12) {
-        formiddag += temperatur;
-        formiddagcount += 1;
-
-        formiddagRegn += regn;
-
-        formiddagVind += vind;
-
-        if (temperatur < formiddagLow) {
-          formiddagLow = temperatur;
-        }
-        if (temperatur > formiddagHigh) {
-          formiddagHigh = temperatur;
-        }
-      } else if (tid < 18) {
-        ettermiddag += temperatur;
-        ettermiddagcount += 1;
-
-        ettermiddagRegn += regn;
-
-        ettermiddagVind += vind;
-
-        if (temperatur < ettermiddagLow) {
-          ettermiddagLow = temperatur;
-        }
-        if (temperatur > ettermiddagHigh) {
-          ettermiddagHigh = temperatur;
-        }
-      } else {
-        kveld += temperatur;
-        kveldcount += 1;
-
-        kveldVind += vind;
-
-        kveldRegn += regn;
-
-        if (temperatur < kveldLow) {
-          kveldLow = temperatur;
-        }
-        if (temperatur > kveldHigh) {
-          kveldHigh = temperatur;
-        }
-      }
-    }
-  });
-  const uke = [
-    "Søndag",
-    "Mandag",
-    "Tirsdag",
-    "Onsdag",
-    "Torsdag",
-    "Fredag",
-    "Lørdag",
-  ];
-  const month = [
-    "Januar",
-    "Februar",
-    "Mars",
-    "April",
-    "Mai",
-    "Juni",
-    "Juli",
-    "August",
-    "September",
-    "Oktober",
-    "November",
-    "Desember",
-  ];
-
-  const date = new Date(isoFormatTomorrow);
+const displayData = (
+  date,
+  etapper,
+  totalTemp,
+  count,
+  isoFormatTomorrow,
+  brukerVariabler,
+  uke,
+  month,
+  totalVind
+) => {
   console.log(
     `${uke[date.getDay()]} ${isoFormatTomorrow.slice(8, 10)}.${
       month[parseInt(isoFormatTomorrow.slice(5, 7))]
@@ -232,88 +88,123 @@ const test = (data, isoFormatTomorrow, brukerVariabler) => {
       brukerVariabler.includes("regn")
         ? `${
             Math.round(
-              (morgenRegn + formiddagRegn + ettermiddagRegn + kveldRegn) * 100
+              (etapper[0].regn +
+                etapper[1].regn +
+                etapper[2].regn +
+                etapper[3].regn) *
+                100
             ) / 100
           }mm regn`
         : ""
     } ${
       brukerVariabler.includes("vind")
-        ? `snittvind ${totalVind / count} m/s`
+        ? `snittvind ${Math.round((totalVind / count) * 100) / 100} m/s`
         : ""
     }
     \n`
   );
-  console.log(
-    `00-08: ${
-      brukerVariabler.includes("temperatur")
-        ? ` fra ${morgenLow} til ${morgenHigh} grader (snittemperatur ${
-            Math.round((morgen / morgencount) * 100) / 100
-          } grader) `
-        : ""
-    } ${
-      brukerVariabler.includes("regn")
-        ? `${Math.round(morgenRegn * 100) / 100}mm regn`
-        : ""
-    } ${
-      brukerVariabler.includes("vind") ? `${morgenVind / morgencount} m/s` : ""
+
+  etapper.map((etappe) => {
+    console.log(
+      `${etappe.timeStart}-${etappe.timeEnd}: ${
+        brukerVariabler.includes("temperatur")
+          ? ` fra ${etappe.low} til ${etappe.high} grader (snittemperatur ${
+              Math.round((etappe.temp / etappe.count) * 100) / 100
+            } grader) `
+          : ""
+      } ${
+        brukerVariabler.includes("regn")
+          ? `${Math.round(etappe.regn * 100) / 100}mm regn`
+          : ""
+      } ${
+        brukerVariabler.includes("vind")
+          ? `${Math.round((etappe.vind / etappe.count) * 100) / 100} m/s`
+          : ""
+      }
+      \n`
+    );
+  });
+};
+
+function Etappe(timeStart, timeEnd) {
+  this.timeStart = timeStart;
+  this.timeEnd = timeEnd;
+  this.temp = 0;
+  this.low = 9999;
+  this.high = -9999;
+  this.count = 0;
+  this.regn = 0;
+  this.vind = 0;
+}
+
+const getRain = (data) => {
+  if (data.next_1_hours) {
+    return data.next_1_hours.details.precipitation_amount;
+  } else if (data.next_6_hours) {
+    return data.next_6_hours.details.precipitation_amount;
+  }
+  return 0;
+};
+
+const updateEtappe = (etappe, temperatur, regn, vind) => {
+  etappe.temp += temperatur;
+  etappe.regn += regn;
+  etappe.vind += vind;
+  etappe.count += 1;
+
+  highLowCheck(etappe, temperatur);
+}
+
+const getData = (data, isoFormatTomorrow, brukerVariabler) => {
+  let totalTemp = 0;
+  let count = 0;
+  let totalVind = 0;
+
+  const morgen = new Etappe(0, 8);
+  const formiddag = new Etappe(8, 12);
+  const ettermiddag = new Etappe(12, 18);
+  const kveld = new Etappe(18, 24);
+
+  const etapper = [morgen, formiddag, ettermiddag, kveld];
+
+  data.properties.timeseries.map((dataBlock) => {
+    if (isoFormatTomorrow.slice(0, 10) == dataBlock.time.slice(0, 10)) {
+      const tid = dataBlock.time.slice(11, 13);
+      const temperatur = dataBlock.data.instant.details.air_temperature;
+      const vind = dataBlock.data.instant.details.wind_speed;
+      const regn = getRain(dataBlock.data);
+
+      totalTemp += temperatur;
+      count += 1;
+      totalVind += vind;
+
+      etapper.map((etappe) => {
+        if (tid >= etappe.timeStart && tid < etappe.timeEnd) {
+          updateEtappe(etappe, temperatur, regn, vind)
+        }
+      });
     }
-    \n`
-  );
-  console.log(
-    `08-12: ${
-      brukerVariabler.includes("temperatur")
-        ? `fra ${formiddagLow} til ${formiddagHigh} grader (snittemperatur ${
-            Math.round((formiddag / formiddagcount) * 100) / 100
-          } grader) `
-        : ""
-    } ${
-      brukerVariabler.includes("regn")
-        ? `${Math.round(formiddagRegn * 100) / 100}mm regn`
-        : ""
-    } ${
-      brukerVariabler.includes("vind")
-        ? `${formiddagVind / formiddagcount} m/s`
-        : ""
-    }
-    \n`
-  );
-  console.log(
-    `12-18:  ${
-      brukerVariabler.includes("temperatur")
-        ? `fra ${ettermiddagLow} til ${ettermiddagHigh} grader (snittemperatur ${
-            Math.round((ettermiddag / ettermiddagcount) * 100) / 100
-          } grader) `
-        : ""
-    }${
-      brukerVariabler.includes("regn")
-        ? `${Math.round(ettermiddagRegn * 100) / 100}mm regn`
-        : ""
-    } ${
-      brukerVariabler.includes("vind")
-        ? `${ettermiddagVind / ettermiddagcount} m/s`
-        : ""
-    }
-    \n`
-  );
-  console.log(
-    `18-00: ${
-      brukerVariabler.includes("temperatur")
-        ? `fra ${kveldLow} til ${kveldHigh} grader (snittemperatur ${
-            Math.round((kveld / kveldcount) * 100) / 100
-          } grader)  `
-        : ""
-    }${
-      brukerVariabler.includes("regn")
-        ? `${Math.round(kveldRegn * 100) / 100}mm regn`
-        : ""
-    } ${brukerVariabler.includes("vind") ? `${kveldVind / kveldcount} m/s` : ""}
-    \n\n\n`
+  });
+
+  const date = new Date(isoFormatTomorrow);
+
+  displayData(
+    date,
+    etapper,
+    totalTemp,
+    count,
+    isoFormatTomorrow,
+    brukerVariabler,
+    uke,
+    month,
+    totalVind
   );
 };
 
 const main = async () => {
   let byNavn = await cityQuestion();
   let reply = finnesBy(byNavn);
+
   while (reply.status == false) {
     console.log(reply.message);
     byNavn = await cityQuestion();
@@ -334,7 +225,7 @@ const main = async () => {
       const nextDay = new Date(today);
       nextDay.setDate(today.getDate() + i);
       const isoFormatNextDay = nextDay.toISOString();
-      test(weatherdata, isoFormatNextDay, brukerVariabler);
+      getData(weatherdata, isoFormatNextDay, brukerVariabler);
     }
   } else {
     console.log(reply.message);

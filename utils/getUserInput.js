@@ -5,37 +5,29 @@ const readline = require("node:readline").createInterface({
   output: process.stdout,
 });
 
-const cityQuestion = () => {
+
+const userQuestion = (question) => {
   return new Promise((resolve, reject) => {
-    readline.question(`Hvilken by ønsker du å vite om? `, (byNavn) => {
-      resolve(byNavn);
+    readline.question(`${question}`, (reply) => {
+      resolve(reply);
     });
   });
-};
-
-const variableQuestion = () => {
-  return new Promise((resolve, reject) => {
-    readline.question(
-      `Hva vil du vite? (regn, temperatur, vind) `,
-      (brukerVariabler) => {
-        resolve(brukerVariabler.replace(/\s/g, "").split(","));
-      }
-    );
-  });
-};
+}
 
 module.exports = {
   getUserInput: async () => {
-    let byNavn = await cityQuestion();
+    let byNavn = await userQuestion(`Hvilken by ønsker du å vite om? `);
+
     let reply = finnesBy(byNavn);
 
     while (reply.status == false) {
       console.log(reply.message);
-      byNavn = await cityQuestion();
+      byNavn = await userQuestion(`Hvilken by ønsker du å vite om? `);
       reply = finnesBy(byNavn);
     }
 
-    const brukerVariabler = await variableQuestion();
+    const brukerVariablerInput = await userQuestion(`Hva vil du vite? (regn, temperatur, vind) `);
+    const brukerVariabler = brukerVariablerInput.replace(/\s/g, "").split(",")
     readline.close();
 
     return { reply, brukerVariabler };

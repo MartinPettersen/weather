@@ -6,7 +6,7 @@ module.exports = {
 
     console.log(
       `${uke[date.getDay()]} ${dag.isoFormatTomorrow.slice(8, 10)}.${
-        month[parseInt(dag.isoFormatTomorrow.slice(5, 7))]
+        month[parseInt(dag.isoFormatTomorrow.slice(5, 7)) -1]
       } ${dag.isoFormatTomorrow.slice(0, 4)}  ${
         brukerVariabler.includes("temperatur")
           ? `(snittemperatur ${

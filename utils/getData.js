@@ -1,5 +1,5 @@
 const { displayData } = require("./displayData.js");
-const { updateDag } = require("./updateDag.js");
+const { getRain } = require("./getRain.js");
 
 class Etappe {
   constructor(timeStart, timeEnd) {
@@ -11,6 +11,24 @@ class Etappe {
     this.count = 0;
     this.regn = 0;
     this.vind = 0;
+  }
+
+  highLowCheck( temperatur) {
+    if (temperatur < this.low) {
+      this.low = temperatur;
+    }
+    if (temperatur > this.high) {
+      this.high = temperatur;
+    }
+  }
+
+  updateEtappe(temperatur, regn, vind) {
+    this.temp += temperatur;
+    this.regn += regn;
+    this.vind += vind;
+    this.count += 1;
+
+    this.highLowCheck(temperatur);
   }
 }
 
@@ -28,6 +46,23 @@ class Dag {
       new Etappe(18, 24),
     ];
   }
+  updateDag (dataBlock) {
+    const tid = dataBlock.time.slice(11, 13);
+    const temperatur = dataBlock.data.instant.details.air_temperature;
+    const vind = dataBlock.data.instant.details.wind_speed;
+    const regn = getRain(dataBlock.data);
+
+    this.totalTemp += temperatur;
+    this.count += 1;
+    this.totalVind += vind;
+    this.totalRegn += regn;
+
+    this.etapper.map((etappe) => {
+      if (tid >= etappe.timeStart && tid < etappe.timeEnd) {
+        etappe.updateEtappe(temperatur, regn, vind);
+      }
+    });
+  }
 }
 
 module.exports = {
@@ -36,7 +71,7 @@ module.exports = {
 
     data.properties.timeseries.map((dataBlock) => {
       if (isoFormatTomorrow.slice(0, 10) == dataBlock.time.slice(0, 10)) {
-        updateDag(dataBlock, dag);
+        dag.updateDag(dataBlock);
       }
     });
 
